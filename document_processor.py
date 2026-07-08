@@ -15,13 +15,26 @@ class DocumentProcessor:
         self.exhibit_pattern = re.compile(r'^(?:EXHIBIT|SCHEDULE)\s+[A-Z\d]+', re.IGNORECASE)
 
     def extract_text_from_pdf(self, pdf_path: str) -> List[Dict[str, Any]]:
-        """Extracts text from PDF page by page, keeping page numbers."""
+        """Extracts text from PDF page by page, keeping page numbers. Uses OCR if no text found."""
         pages_data = []
         try:
             with pdfplumber.open(pdf_path) as pdf:
                 for i, page in enumerate(pdf.pages):
                     text = page.extract_text()
-                    if text:
+                    
+                    # OCR Fallback for scanned PDFs
+                    if not text or len(text.strip()) < 50:
+                        try:
+                            import pytesseract
+                            # Convert PDF page to PIL Image
+                            pil_image = page.to_image(resolution=300).original
+                            text = pytesseract.image_to_string(pil_image)
+                        except ImportError:
+                            print("pytesseract not installed. Skipping OCR.")
+                        except Exception as e:
+                            print(f"OCR failed on page {i+1}: {e}")
+
+                    if text and text.strip():
                         pages_data.append({"page_num": i + 1, "text": text})
         except Exception as e:
             print(f"Error extracting PDF: {e}")
