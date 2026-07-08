@@ -1,0 +1,789 @@
+<title>The Making of a Legal Document Assistant</title>
+<style>
+  :root{
+    --paper:#f3efd9;
+    --paper-deep:#eae3c2;
+    --rule:#aebfd4;
+    --ink:#212a3a;
+    --ink-soft:#57647c;
+    --gold:#8f6e28;
+    --gold-soft:#f2e8c8;
+    --redtape:#8a2331;
+    --redtape-soft:#f5e2df;
+    --font-display:'Iowan Old Style','Palatino Linotype',Palatino,Georgia,'Times New Roman',serif;
+    --font-body:Georgia,'Iowan Old Style','Times New Roman',serif;
+    --font-mono:'Courier New',Courier,monospace;
+    --font-label:'Helvetica Neue',Arial,sans-serif;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background-color:var(--paper);
+    background-image:repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent calc(1.9em - 1px),
+      rgba(84,110,148,0.14) 1.9em
+    );
+    color:var(--ink);
+    font-family:var(--font-body);
+    font-size:17px;
+    line-height:1.9;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  h1,h2,h3,h4{
+    font-family:var(--font-display);
+    font-weight:600;
+    text-wrap:balance;
+    color:var(--ink);
+    margin:0;
+  }
+
+  p{margin:0 0 1.1em 0;}
+  p:last-child{margin-bottom:0;}
+
+  .page{
+    max-width:800px;
+    margin:0 auto;
+    padding:0 28px 96px 28px;
+  }
+
+  /* ---------- Cover ---------- */
+  .cover{
+    position:relative;
+    padding:76px 0 44px 34px;
+    border-bottom:3px double var(--ink);
+    margin-bottom:52px;
+  }
+  .cover::before{
+    content:"";
+    position:absolute;
+    left:0;
+    top:0;
+    bottom:0;
+    width:2px;
+    background:var(--redtape);
+    opacity:0.55;
+  }
+  .eyebrow{
+    font-family:var(--font-label);
+    font-size:12px;
+    letter-spacing:0.16em;
+    text-transform:uppercase;
+    color:var(--redtape);
+    font-weight:700;
+    margin-bottom:18px;
+  }
+  .cover h1{
+    font-size:clamp(34px,5.4vw,52px);
+    line-height:1.12;
+    max-width:14ch;
+  }
+  .cover .subtitle{
+    font-family:var(--font-body);
+    font-style:italic;
+    font-size:19px;
+    color:var(--ink-soft);
+    max-width:46ch;
+    margin-top:20px;
+  }
+  .cover .meta{
+    font-family:var(--font-label);
+    font-size:12.5px;
+    letter-spacing:0.04em;
+    color:var(--ink-soft);
+    margin-top:30px;
+  }
+
+  /* ---------- Table of contents ---------- */
+  .toc{
+    margin-bottom:60px;
+    padding-left:34px;
+  }
+  .toc-title{
+    font-family:var(--font-label);
+    font-size:12px;
+    letter-spacing:0.16em;
+    text-transform:uppercase;
+    color:var(--gold);
+    font-weight:700;
+    margin-bottom:14px;
+  }
+  .toc ol{
+    list-style:none;
+    margin:0;
+    padding:0;
+    columns:2;
+    column-gap:32px;
+  }
+  .toc li{
+    break-inside:avoid;
+    margin-bottom:9px;
+  }
+  .toc a{
+    color:var(--ink);
+    text-decoration:none;
+    font-size:14.5px;
+    border-bottom:1px dotted var(--ink-soft);
+  }
+  .toc a:hover, .toc a:focus-visible{color:var(--redtape);}
+
+  /* ---------- Article structure ---------- */
+  article.article{
+    margin-bottom:66px;
+    padding-left:34px;
+    position:relative;
+    scroll-margin-top:24px;
+  }
+  article.article::before{
+    content:"";
+    position:absolute;
+    left:0;
+    top:6px;
+    bottom:0;
+    width:2px;
+    background:var(--redtape);
+    opacity:0.4;
+  }
+  .article-head{
+    display:flex;
+    align-items:baseline;
+    gap:16px;
+    margin-bottom:22px;
+    padding-bottom:14px;
+    border-bottom:1px solid var(--ink);
+  }
+  .article-num{
+    font-family:var(--font-display);
+    font-size:15px;
+    letter-spacing:0.08em;
+    color:var(--gold);
+    font-weight:700;
+    white-space:nowrap;
+  }
+  .article-head h2{
+    font-size:28px;
+  }
+  .article-dek{
+    font-style:italic;
+    color:var(--ink-soft);
+    font-size:16px;
+    margin-bottom:26px;
+    max-width:60ch;
+  }
+
+  .lede{
+    font-size:18.5px;
+    line-height:1.85;
+    max-width:62ch;
+  }
+
+  blockquote.pull{
+    margin:30px 2px 30px 0;
+    padding:4px 0 4px 22px;
+    border-left:3px solid var(--gold);
+    font-family:var(--font-display);
+    font-size:20px;
+    line-height:1.55;
+    font-style:italic;
+    color:var(--ink);
+    max-width:56ch;
+  }
+
+  /* ---------- Exhibit table (tech stack) ---------- */
+  .exhibit-table{
+    width:100%;
+    border-collapse:collapse;
+    margin:20px 0 8px 0;
+    font-size:15px;
+  }
+  .exhibit-table th{
+    font-family:var(--font-label);
+    font-size:11px;
+    letter-spacing:0.1em;
+    text-transform:uppercase;
+    text-align:left;
+    color:var(--ink-soft);
+    padding:8px 14px 8px 0;
+    border-bottom:2px solid var(--ink);
+  }
+  .exhibit-table td{
+    padding:13px 14px 13px 0;
+    border-bottom:1px solid var(--rule);
+    vertical-align:top;
+  }
+  .exhibit-table tr:last-child td{border-bottom:1px solid var(--ink);}
+  .exhibit-table .layer{
+    font-family:var(--font-label);
+    font-size:11px;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:var(--redtape);
+    white-space:nowrap;
+    padding-top:15px;
+  }
+  .exhibit-table .tool{
+    font-family:var(--font-mono);
+    font-size:14px;
+    white-space:nowrap;
+    color:var(--ink);
+  }
+  .exhibit-table .why{color:var(--ink-soft);}
+
+  /* ---------- Chapters (story) ---------- */
+  .chapter{
+    margin:34px 0;
+    padding-top:6px;
+  }
+  .chapter-tag{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    margin-bottom:10px;
+  }
+  .chapter-tag .num{
+    font-family:var(--font-display);
+    font-size:13px;
+    font-weight:700;
+    color:var(--gold);
+    letter-spacing:0.05em;
+  }
+  .chapter-tag .rule{
+    flex:1;
+    height:1px;
+    background:var(--rule);
+  }
+  .chapter h3{
+    font-size:21px;
+    margin-bottom:10px;
+  }
+  .chapter p{max-width:64ch;}
+
+  /* ---------- Timeline (build order) ---------- */
+  .timeline{
+    list-style:none;
+    margin:24px 0 0 0;
+    padding:0;
+    border-left:2px solid var(--gold);
+  }
+  .timeline li{
+    position:relative;
+    padding:0 0 30px 26px;
+  }
+  .timeline li::before{
+    content:"";
+    position:absolute;
+    left:-6px;
+    top:5px;
+    width:10px;
+    height:10px;
+    background:var(--paper);
+    border:2px solid var(--gold);
+    border-radius:50%;
+  }
+  .timeline .day{
+    font-family:var(--font-label);
+    font-size:11.5px;
+    letter-spacing:0.1em;
+    text-transform:uppercase;
+    font-weight:700;
+    color:var(--redtape);
+    margin-bottom:4px;
+  }
+  .timeline .goal{
+    font-family:var(--font-display);
+    font-size:17px;
+    margin-bottom:4px;
+  }
+  .timeline .detail{
+    color:var(--ink-soft);
+    font-size:15px;
+    max-width:56ch;
+  }
+
+  /* ---------- Prompt exhibit ---------- */
+  .prompt-box{
+    background:var(--ink);
+    color:#e9e4c9;
+    font-family:var(--font-mono);
+    font-size:13.5px;
+    line-height:1.75;
+    padding:28px 26px;
+    margin:24px 0;
+    overflow-x:auto;
+    white-space:pre;
+    border:1px solid var(--ink);
+    position:relative;
+  }
+  .prompt-box::before{
+    content:"EXHIBIT A — GENERATION PROMPT";
+    display:block;
+    font-family:var(--font-label);
+    font-size:10.5px;
+    letter-spacing:0.14em;
+    color:#c9a24a;
+    margin-bottom:16px;
+    white-space:normal;
+  }
+  .prompt-note{
+    display:flex;
+    gap:14px;
+    margin-top:16px;
+    padding:14px 16px;
+    background:var(--gold-soft);
+    border-left:3px solid var(--gold);
+    font-size:14.5px;
+    color:var(--ink);
+  }
+  .prompt-note b{color:var(--redtape);}
+
+  /* ---------- Anti-pattern list ---------- */
+  .antipatterns{
+    list-style:none;
+    margin:22px 0 0 0;
+    padding:0;
+    display:flex;
+    flex-direction:column;
+    gap:2px;
+  }
+  .antipatterns li{
+    border-left:4px solid var(--redtape);
+    background:var(--redtape-soft);
+    padding:14px 18px;
+    font-size:15px;
+  }
+  .antipatterns b{display:block;font-family:var(--font-display);font-size:15.5px;margin-bottom:3px;}
+
+  /* ---------- Done checklist ---------- */
+  .checklist{
+    list-style:none;
+    margin:20px 0 0 0;
+    padding:0;
+  }
+  .checklist li{
+    display:flex;
+    gap:12px;
+    padding:11px 0;
+    border-bottom:1px solid var(--rule);
+    font-size:15.5px;
+  }
+  .checklist li:last-child{border-bottom:none;}
+  .checklist .box{
+    font-family:var(--font-mono);
+    font-size:16px;
+    color:var(--gold);
+    flex-shrink:0;
+  }
+
+  /* ---------- Problem / novelty cards ---------- */
+  .cluster-title{
+    font-family:var(--font-label);
+    font-size:12px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--redtape);
+    font-weight:700;
+    margin:34px 0 14px 0;
+  }
+  .cluster-title.gold{color:var(--gold);}
+  .card-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:16px;
+  }
+  @media (max-width:640px){ .card-grid{grid-template-columns:1fr;} }
+
+  .card{
+    background:var(--paper-deep);
+    border-left:4px solid var(--redtape);
+    padding:18px 20px;
+    transition:box-shadow 0.15s ease, transform 0.15s ease;
+  }
+  .card:hover{box-shadow:0 4px 14px rgba(33,42,58,0.14); transform:translateY(-1px);}
+  .card.idea{border-left-color:var(--gold);}
+  .card h4{
+    font-size:16.5px;
+    margin-bottom:8px;
+  }
+  .card .field{
+    font-size:13.5px;
+    margin-bottom:8px;
+  }
+  .card .field b{
+    display:block;
+    font-family:var(--font-label);
+    font-size:10.5px;
+    letter-spacing:0.09em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    font-weight:700;
+    margin-bottom:2px;
+  }
+  .card .field:last-child{margin-bottom:0;}
+  .tag{
+    display:inline-block;
+    font-family:var(--font-label);
+    font-size:10px;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    font-weight:700;
+    color:#fff;
+    background:var(--gold);
+    padding:3px 9px;
+    margin-bottom:10px;
+  }
+
+  /* ---------- Colophon ---------- */
+  .colophon{
+    margin-top:70px;
+    padding:30px 0 0 34px;
+    border-top:3px double var(--ink);
+    font-style:italic;
+    color:var(--ink-soft);
+    font-size:15.5px;
+    max-width:58ch;
+  }
+  .colophon .sign{
+    margin-top:16px;
+    font-family:var(--font-label);
+    font-style:normal;
+    font-size:12px;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:var(--gold);
+  }
+
+  .reveal{
+    opacity:0;
+    transform:translateY(10px);
+    transition:opacity 0.6s ease, transform 0.6s ease;
+  }
+  .reveal.in{opacity:1; transform:translateY(0);}
+  @media (prefers-reduced-motion:reduce){
+    .reveal{opacity:1; transform:none; transition:none;}
+  }
+
+  ::selection{background:var(--gold-soft); color:var(--ink);}
+</style>
+
+<div class="page">
+
+  <div class="cover">
+    <div class="eyebrow">Case File No. 001 — Build Record</div>
+    <h1>The Making of a<br>Legal Document Assistant</h1>
+    <p class="subtitle">How a stack of PDFs becomes a system that answers questions about itself — and, just as importantly, knows what it doesn't know.</p>
+    <p class="meta">Narrated from the build blueprint · working draft, 02 July 2026</p>
+  </div>
+
+  <nav class="toc">
+    <div class="toc-title">Table of Contents</div>
+    <ol>
+      <li><a href="#preamble">Before the Filing</a></li>
+      <li><a href="#article-1">Article I — The Instruments</a></li>
+      <li><a href="#article-2">Article II — The Life of a Document</a></li>
+      <li><a href="#article-3">Article III — The Order of Operations</a></li>
+      <li><a href="#article-4">Article IV — Exhibit A: The Prompt</a></li>
+      <li><a href="#article-5">Article V — Things Not To Do</a></li>
+      <li><a href="#article-6">Article VI — Definition of Done</a></li>
+      <li><a href="#article-7">Article VII — Red Tape: Where This Breaks</a></li>
+      <li><a href="#article-8">Article VIII — Proposed Amendments</a></li>
+    </ol>
+  </nav>
+
+  <article class="article reveal" id="preamble">
+    <div class="article-head">
+      <span class="article-num">PREAMBLE</span>
+      <h2>Before the Filing</h2>
+    </div>
+    <p class="lede">Somewhere between a Streamlit tutorial and a tool a lawyer would actually trust sits the project we're about to build. In one sentence: a user hands the app a contract, the app breaks that contract into pieces that still mean something on their own, turns those pieces into searchable vectors, and — when asked a question — finds the right pieces and asks a language model to answer using <em>only</em> them, pointing back every time to exactly where in the document the answer lives.</p>
+    <blockquote class="pull">That sentence is simple. The failure mode that ruins most attempts at it is almost invisible.</blockquote>
+    <p>Chop the text into even 500-token blocks — the way nearly every RAG tutorial does — and you will slice clauses in half, sever definitions from the terms they define, and hand your model half a sentence to reason with. It won't crash. It will just quietly get worse, in ways nobody notices until day seven, debugging the wrong layer entirely. Everything that follows is built to dodge that one trap. Read it once, fully, before writing a line of code — the project fails silently, not loudly, and knowing the shape of the whole build now is what saves you the detour later.</p>
+  </article>
+
+  <article class="article reveal" id="article-1">
+    <div class="article-head">
+      <span class="article-num">ARTICLE I</span>
+      <h2>The Instruments</h2>
+    </div>
+    <p class="article-dek">Every tool on this list was chosen for a reason narrower than "it's popular." None of it is exotic — and that's deliberate.</p>
+    <table class="exhibit-table">
+      <thead><tr><th>Layer</th><th>Instrument</th><th>Why this one, specifically</th></tr></thead>
+      <tbody>
+        <tr><td class="layer">Interface</td><td class="tool">Streamlit</td><td class="why">Fastest path from empty folder to a usable interface; file upload built in.</td></tr>
+        <tr><td class="layer">PDF parsing</td><td class="tool">pdfplumber + pytesseract</td><td class="why">pdfplumber preserves layout — numbering, indentation — far better than PyPDF2; pytesseract catches what's actually a scanned photograph, not real text.</td></tr>
+        <tr><td class="layer">Chunking</td><td class="tool">custom heading-aware splitter</td><td class="why">Contracts have real structure — clauses, sections, sub-clauses. A generic splitter can't see any of it.</td></tr>
+        <tr><td class="layer">Embeddings</td><td class="tool">all-MiniLM-L6-v2</td><td class="why">Small, fast, runs on a CPU, good enough for a document this size — no GPU required.</td></tr>
+        <tr><td class="layer">Vector store</td><td class="tool">FAISS (local)</td><td class="why">Zero infrastructure, nothing external to manage, correctly sized for a single-user app.</td></tr>
+        <tr><td class="layer">Orchestration</td><td class="tool">LangChain</td><td class="why">Handles retrieval-chain plumbing so prompt assembly isn't hand-rolled from scratch.</td></tr>
+        <tr><td class="layer">Language model</td><td class="tool">Groq-hosted Llama</td><td class="why">Fast inference and a generous free tier — built for iterating quickly, not for the final bill.</td></tr>
+        <tr><td class="layer">Persistence</td><td class="tool">local disk (pickle / JSON)</td><td class="why">No database earns its place yet — this is a single-session demo, not a multi-tenant product.</td></tr>
+      </tbody>
+    </table>
+    <p style="margin-top:18px;color:var(--ink-soft);">Infrastructure competes with your attention, and the retrieval pipeline needs all of it. Docker, a hosted database, a real deployment — all correctly absent, until the pipeline has earned them.</p>
+  </article>
+
+  <article class="article reveal" id="article-2">
+    <div class="article-head">
+      <span class="article-num">ARTICLE II</span>
+      <h2>The Life of a Document</h2>
+    </div>
+    <p class="article-dek">One document's journey from upload to a defensible answer, told once, fully, before any of it becomes code.</p>
+
+    <div class="chapter">
+      <div class="chapter-tag"><span class="num">CHAPTER ONE</span><span class="rule"></span></div>
+      <h3>The Document Arrives</h3>
+      <p>A user drags a lease agreement, an NDA, a services contract — something with real stakes — into the uploader. Before the app does anything clever, it answers a duller question first: is this a clean digital PDF, or a photograph of one? A born-digital contract carries selectable text that pdfplumber lifts out cleanly. A scanned signature page or a faxed amendment is just a picture of text, and pdfplumber will hand back nothing or noise. The app checks by attempting a fast extraction on page one; if the character count comes back suspiciously thin for how dense the page looks, it assumes a scan and reroutes to OCR. This branch has to exist from day one — real contracts are scanned copies of signed paper far more often than tutorials admit.</p>
+    </div>
+
+    <div class="chapter">
+      <div class="chapter-tag"><span class="num">CHAPTER TWO</span><span class="rule"></span></div>
+      <h3>The Text Finds Its Skeleton</h3>
+      <p>Raw text, once extracted, does not go straight into a chunker. Legal writing already comes pre-organized — numbered clauses, ALL-CAPS headers like <em>DEFINITIONS</em> or <em>INDEMNIFICATION</em>, Roman-numeral Articles — and that structure is the best resource the app has for cutting text in the right places. A lightweight parser walks the text hunting for these patterns and emits not a wall of prose but a list of <code>(heading, body, page number)</code> triples. This is the moment the project stops treating a contract like generic text and starts treating it like what it actually is: a document with a skeleton.</p>
+    </div>
+
+    <div class="chapter">
+      <div class="chapter-tag"><span class="num">CHAPTER THREE</span><span class="rule"></span></div>
+      <h3>The Skeleton Becomes Chunks</h3>
+      <p>Chunking happens inside each clause now, never across a clause boundary. A short clause — a definition, a single obligation — becomes one chunk outright. A long one, like a two-page indemnification section, gets split further, but only at sentence boundaries, with 100–150 tokens of overlap so meaning doesn't fall into the seam. Every chunk carries its lineage with it: source document, page number, the heading it lives under, its position within that clause. Quiet infrastructure — but it's what turns "this came from somewhere in the document" into "this came from Section 4.2, Indemnification, page 7."</p>
+    </div>
+
+    <div class="chapter">
+      <div class="chapter-tag"><span class="num">CHAPTER FOUR</span><span class="rule"></span></div>
+      <h3>Chunks Become Vectors</h3>
+      <p>Each chunk passes through all-MiniLM-L6-v2 and comes out the other side as a 384-number fingerprint of its meaning — done in batches, not one at a time, or a longer contract makes you wait. Those fingerprints, metadata still attached, land in a FAISS index. For a project this size, brute-force exact search is not a compromise; it's the right call. There won't be enough chunks for approximate search to matter, and exact search removes one more variable to debug later.</p>
+    </div>
+
+    <div class="chapter">
+      <div class="chapter-tag"><span class="num">CHAPTER FIVE</span><span class="rule"></span></div>
+      <h3>A Question Arrives</h3>
+      <p>Someone types: <em>"What happens if the tenant defaults on rent for more than 30 days?"</em> The question is embedded through the same MiniLM model that built the index, and FAISS hands back the five chunks sitting closest to it in vector space. Before those chunks touch a language model, they get logged and read — printed to a console, eyeballed by a human. Almost every retrieval failure in this project reveals itself right here, in five printed paragraphs, long before it would otherwise show up disguised as "the model gave a bad answer."</p>
+    </div>
+
+    <div class="chapter">
+      <div class="chapter-tag"><span class="num">CHAPTER SIX</span><span class="rule"></span></div>
+      <h3>The Answer Gets Written</h3>
+      <p>The retrieved chunks, numbered and labeled with their sections and pages, get assembled into a prompt and sent to a Groq-hosted model — reproduced in full as Exhibit A, Article IV, because it is the single most consequential piece of writing in the entire project. The answer that comes back is shown alongside the exact excerpts the model was permitted to use, so the person reading it can check the app's work against the actual contract instead of taking its word for it. Source-backing isn't a UI feature bolted on afterward — it's the whole premise.</p>
+    </div>
+
+    <div class="chapter">
+      <div class="chapter-tag"><span class="num">CHAPTER SEVEN</span><span class="rule"></span></div>
+      <h3>The Answer Gets Checked</h3>
+      <p>This last chapter never happens inside the app — it happens at your desk, and it's the step almost everyone skips. Before calling this finished, you write twenty to thirty questions against two or three real contracts, know the right answers yourself, and grade the app against them. That graded set is what separates "I built a demo" from "I built and validated a system" — and it's the sentence you actually want to be saying out loud later, to whoever's asking.</p>
+    </div>
+  </article>
+
+  <article class="article reveal" id="article-3">
+    <div class="article-head">
+      <span class="article-num">ARTICLE III</span>
+      <h2>The Order of Operations</h2>
+    </div>
+    <p class="article-dek">No calendar attached to any of this — go at whatever pace fits. But build out of order and the project stalls, because every step below is a dependency for the next one, not a suggestion.</p>
+    <ul class="timeline">
+      <li><div class="day">Step 1</div><div class="goal">Get raw text out of a PDF — nothing else</div><div class="detail">No chunking, no embeddings, no model calls. Prove clean extraction works on one digital PDF and one scanned one. Handle the scanned case even crudely.</div></li>
+      <li><div class="day">Step 2</div><div class="goal">Build the structural parser</div><div class="detail">Produce the (heading, body, page) triples. Print them, open the PDF beside the output, and check ten clauses by hand.</div></li>
+      <li><div class="day">Step 3</div><div class="goal">Chunk within clauses, embed, build the FAISS index</div><div class="detail">The most mechanically standard part of the build — documentation gets you there fast.</div></li>
+      <li><div class="day">Step 4</div><div class="goal">Wire up retrieval and the Groq call</div><div class="detail">Get one question working end to end in a plain script, before Streamlit ever enters the picture. Prompt iteration is much faster without a UI in the way.</div></li>
+      <li><div class="day">Step 5</div><div class="goal">Build the Streamlit interface</div><div class="detail">Upload, question box, answer, source citations. Fast once the backend already works — building it first only tempts you into testing by clicking instead of by code.</div></li>
+      <li><div class="day">Step 6</div><div class="goal">OCR fallback and legal-chunking edge cases</div><div class="detail">Tackle only once the clean-PDF path fully works, or you won't know which layer is actually failing.</div></li>
+      <li><div class="day">Step 7</div><div class="goal">Harden the prompt against hallucination</div><div class="detail">Deliberately ask questions the document doesn't answer. Confirm it says so — this is the highest-stakes failure mode in the app.</div></li>
+      <li><div class="day">Step 8</div><div class="goal">Build and run the evaluation set</div><div class="detail">Twenty to thirty question/answer pairs, scored correct / partial / wrong, kept in the repo as evidence — not a private checklist.</div></li>
+    </ul>
+  </article>
+
+  <article class="article reveal" id="article-4">
+    <div class="article-head">
+      <span class="article-num">ARTICLE IV</span>
+      <h2>Exhibit A: The Prompt</h2>
+    </div>
+    <p class="article-dek">Adapt the wording if you like. Keep every rule.</p>
+    <div class="prompt-box">You are a legal document assistant. You must answer the user's question
+using ONLY the excerpts provided below, which come from the document
+"{document_name}".
+
+Rules:
+1. If the excerpts do not contain enough information to answer the
+   question, say so explicitly. Do not guess or use outside knowledge
+   of general legal principles.
+2. When you state a fact, note which excerpt (by number) it came from.
+3. Do not provide legal advice or opinions — only report what the
+   document states.
+4. Keep your answer concise and directly responsive to the question.
+
+Excerpts:
+[1] (Section: {heading_1}, Page {page_1})
+{chunk_text_1}
+
+[2] (Section: {heading_2}, Page {page_2})
+{chunk_text_2}
+
+...
+
+Question: {user_question}
+
+Answer:</div>
+    <div class="prompt-note"><span><b>Rules 1 and 2 carry the whole app.</b> Rule 1 is the primary defense against hallucination — without it, a model will happily reach for its general knowledge of contract law to fill gaps, which is exactly the failure mode that makes a legal tool untrustworthy. Rule 2 is what makes the citation display in the UI meaningful instead of decorative — the model's own numbered references are what let you highlight which source chunk backs each part of the answer.</span></div>
+  </article>
+
+  <article class="article reveal" id="article-5">
+    <div class="article-head">
+      <span class="article-num">ARTICLE V</span>
+      <h2>Things Not To Do</h2>
+    </div>
+    <ul class="antipatterns">
+      <li><b>Don't let the generic splitter be your only chunking strategy.</b> LangChain's recursive character splitter produces technically valid chunks that cut legal meaning in half. Use it only as a secondary splitter inside a clause already too long to be one chunk.</li>
+      <li><b>Don't skip the "no answer found" test case.</b> A demo that only ever answers confidently — even when it shouldn't — looks impressive for five minutes and falls apart the moment anyone tests it seriously.</li>
+      <li><b>Don't leave the eval set for the end.</b> Write the first five test questions at step one, before the pipeline works, so you know what "correct" looks like before you're tempted to grade your own app generously.</li>
+      <li><b>Don't over-invest in the UI before retrieval is good.</b> A beautiful interface wrapped around bad retrieval is still a bad app. Polish is the last ten percent, not the first.</li>
+      <li><b>Don't leave page-number tracking for "later."</b> It's far harder to retrofit accurate citations after the fact than to carry them through from chapter three onward.</li>
+    </ul>
+  </article>
+
+  <article class="article reveal" id="article-6">
+    <div class="article-head">
+      <span class="article-num">ARTICLE VI</span>
+      <h2>Definition of Done</h2>
+    </div>
+    <ul class="checklist">
+      <li><span class="box">☐</span><span>Upload a legal document — clean or scanned — and get accurate answers with correct page and clause citations.</span></li>
+      <li><span class="box">☐</span><span>Ask a question the document doesn't cover, and get an honest "not addressed in this document" instead of a confident invention.</span></li>
+      <li><span class="box">☐</span><span>Point to a written evaluation file: twenty to thirty test questions, graded by hand, sitting in the repo.</span></li>
+      <li><span class="box">☐</span><span>Explain out loud why fixed-window chunking fails on legal text, and what was done instead — worth more in an interview than the rest of the project combined.</span></li>
+    </ul>
+  </article>
+
+  <article class="article reveal" id="article-7">
+    <div class="article-head">
+      <span class="article-num">ARTICLE VII</span>
+      <h2>Red Tape: Where This Breaks</h2>
+    </div>
+    <p class="article-dek">Every design decision above is correct for a first version — and every one of them has an edge where it stops holding. Here's where the seams are, and how to reinforce them without over-building at step one.</p>
+
+    <div class="cluster-title">Where the pipeline breaks</div>
+    <div class="card-grid">
+      <div class="card">
+        <h4>Irregular formatting defeats the parser</h4>
+        <div class="field"><b>Why it happens</b>Multi-column layouts, inconsistent numbering, exhibits and schedules with their own formatting rules — the heading regexes silently miss them.</div>
+        <div class="field"><b>The fix</b>Add a fallback layer: if the structural parse yields too few sections for the document's length, fall back to font-size and boldness heuristics from pdfplumber's metadata, or a semantic breakpoint (chunk where consecutive sentence embeddings diverge sharply).</div>
+      </div>
+      <div class="card">
+        <h4>OCR degrades silently on bad scans</h4>
+        <div class="field"><b>Why it happens</b>Skewed pages, low resolution, stamps or signatures overlapping text — pytesseract's accuracy drops without throwing an error, corrupting chunks downstream without any signal.</div>
+        <div class="field"><b>The fix</b>Deskew and binarize images before OCR; surface a per-page confidence score, and flag low-confidence pages in the UI instead of presenting OCR text as equally reliable everywhere.</div>
+      </div>
+      <div class="card">
+        <h4>MiniLM misses legal nuance</h4>
+        <div class="field"><b>Why it happens</b>384 dimensions and general-purpose training struggle with dense jargon and long-range reference — "the Company" pointing back to a definition forty pages earlier won't always retrieve well.</div>
+        <div class="field"><b>The fix</b>Build a small defined-terms index during chapter two and inject matched definitions into the retrieved context directly, independent of embedding similarity.</div>
+      </div>
+      <div class="card">
+        <h4>Fixed top-k both over- and under-retrieves</h4>
+        <div class="field"><b>Why it happens</b>k=5 works for a single-clause question but silently drops relevant chunks for a question like "list every termination condition," which may legitimately span eight.</div>
+        <div class="field"><b>The fix</b>Swap fixed k for a similarity-threshold cutoff, or add a second pass that asks the model whether it needs more context before finalizing an answer.</div>
+      </div>
+    </div>
+
+    <div class="cluster-title">Where trust breaks</div>
+    <div class="card-grid">
+      <div class="card">
+        <h4>Prompting alone doesn't kill hallucination</h4>
+        <div class="field"><b>Why it happens</b>Even with Rule 1 in place, a model can still blend real excerpt text with general legal knowledge on ambiguous questions — the instruction reduces the failure, it doesn't remove it.</div>
+        <div class="field"><b>The fix</b>Add a lightweight self-verification pass: before displaying the answer, ask the model (or a simple entailment check) whether each claim is actually supported by its cited excerpt.</div>
+      </div>
+      <div class="card">
+        <h4>The eval set grades its own author</h4>
+        <div class="field"><b>Why it happens</b>Writing and grading twenty questions yourself, against documents you also used for prompt tuning, bakes in a bias toward passing.</div>
+        <div class="field"><b>The fix</b>Have someone else write a handful of blind questions, and test on at least one document that never touched prompt development.</div>
+      </div>
+      <div class="card">
+        <h4>Sensitive documents, no data policy</h4>
+        <div class="field"><b>Why it happens</b>NDAs and personal contracts are exactly what gets uploaded — and the blueprint is silent on where files go, what Groq sees, or when anything is deleted.</div>
+        <div class="field"><b>The fix</b>State the handling policy plainly in the UI, auto-purge uploads and indices at session end, and treat "we send your clauses to a third-party model" as a disclosure, not an implementation detail.</div>
+      </div>
+      <div class="card">
+        <h4>Citations don't track amendments</h4>
+        <div class="field"><b>Why it happens</b>"Section 4.2" is unambiguous in one contract — but if an amended version is uploaded later, the same label can point to different text with no version marker.</div>
+        <div class="field"><b>The fix</b>Out of scope for a first version, but worth a line of documentation now, and a document-version field in the metadata if multi-version support ever gets added.</div>
+      </div>
+    </div>
+
+    <div class="cluster-title">Where scale breaks</div>
+    <div class="card-grid">
+      <div class="card">
+        <h4>Everything lives in one session</h4>
+        <div class="field"><b>Why it happens</b>An in-memory FAISS index with no persistence layer is correct for a single-user demo, but there's no multi-document or multi-user story at all.</div>
+        <div class="field"><b>The fix</b>This is a feature, not a bug, at this scope — but note the upgrade path openly: a persistent store like Chroma or pgvector, plus a per-user session boundary, if this ever needs to serve more than one person at a time.</div>
+      </div>
+      <div class="card">
+        <h4>Free-tier rate limits during a live demo</h4>
+        <div class="field"><b>Why it happens</b>Groq's free tier is generous for development, not guaranteed for a live walkthrough in front of an interviewer.</div>
+        <div class="field"><b>The fix</b>Cache known Q&A pairs from the eval set, handle rate-limit errors gracefully in the UI, and keep one pre-recorded run as a fallback.</div>
+      </div>
+    </div>
+  </article>
+
+  <article class="article reveal" id="article-8">
+    <div class="article-head">
+      <span class="article-num">ARTICLE VIII</span>
+      <h2>Proposed Amendments</h2>
+    </div>
+    <p class="article-dek">The blueprint above is the defensible, correctly-scoped first version. These are ways to make it sharper, stranger, or more specifically useful — pick at most one or two, not all of them.</p>
+
+    <div class="card-grid">
+      <div class="card idea">
+        <span class="tag">Domain Pivot</span>
+        <h4>Narrow the domain on purpose</h4>
+        <div class="field">"Legal RAG chatbot" is now a crowded shelf. Pointing the same pipeline at one sharp vertical — residential leases for tenants, or freelance contracts for independent workers — gives tighter prompts, an eval set that's actually achievable, and a pitch that lands in one sentence: "it catches unfair clauses in freelance contracts," not "it answers questions about PDFs."</div>
+      </div>
+      <div class="card idea">
+        <span class="tag">New Capability</span>
+        <h4>Flag risk before being asked</h4>
+        <div class="field">Add a pass that scans for known risky clause patterns — auto-renewal, unilateral termination, broad indemnification, arbitration waiving jury trial — and surfaces them unprompted. Turns the app from reactive Q&A into proactive review, and it's a far stronger demo moment than waiting for a good question.</div>
+      </div>
+      <div class="card idea">
+        <span class="tag">New Capability</span>
+        <h4>Compare, don't just answer</h4>
+        <div class="field">Accept two versions of a contract — original and redline — and ask what changed, not just what's there. A diff-aware mode reuses the entire retrieval pipeline but answers a question lawyers actually ask far more often than "what does this say."</div>
+      </div>
+      <div class="card idea">
+        <span class="tag">UX Refinement</span>
+        <h4>A plain-English toggle</h4>
+        <div class="field">Keep the sourced, careful answer as the default, but add a toggle that rewrites it for a non-lawyer reader — translation of what's already been said, not new legal opinion. Reinforces Rule 3 rather than fighting it, and it's a small addition with an outsized demo effect.</div>
+      </div>
+      <div class="card idea">
+        <span class="tag">UX Refinement</span>
+        <h4>Show confidence, not just citations</h4>
+        <div class="field">A small visual signal — how tightly the retrieved chunks clustered, how many independently supported the same claim — builds trust faster than a wall of source text most users will skim past anyway.</div>
+      </div>
+      <div class="card idea">
+        <span class="tag">Minor Tweak</span>
+        <h4>Export the findings, not just the chat</h4>
+        <div class="field">Let a user export flagged clauses and citations as a short issues list they could actually hand to a real lawyer. It quietly repositions the whole app as a first-pass triage tool rather than a substitute for advice — which is both the safer framing and the more honest one.</div>
+      </div>
+    </div>
+  </article>
+
+  <div class="colophon">
+    <p>The build doesn't get more complicated than this document makes it look. Start with Step 1, whenever that is — get clean text out of one PDF, and don't let yourself skip ahead in the sequence, however long each step takes.</p>
+    <div class="sign">— End of Record —</div>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  var els = document.querySelectorAll('.reveal');
+  if (!('IntersectionObserver' in window)) { els.forEach(function(e){e.classList.add('in');}); return; }
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(entry){
+      if (entry.isIntersecting) {
+        entry.target.classList.add('in');
+        io.unobserve(entry.target);
+      }
+    });
+  }, {threshold: 0.08, rootMargin: '0px 0px -40px 0px'});
+  els.forEach(function(e){ io.observe(e); });
+})();
+</script>
